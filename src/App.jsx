@@ -41,36 +41,35 @@ Regole tecniche fondamentali:
 async function callGemini(apiKey, { description, speed, location, axle, centering, precedent, useParams }) {
   const paramsText = useParams ? `\n\nPARAMETRI AGGIUNTIVI:\n- Velocità: ${speed}\n- Dove si sente: ${location}\n- Asse: ${axle}\n- Centraggio: ${centering}\n- Quando è comparso: ${precedent}` : "";
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemma-3-27b-it:generateContent?key=${apiKey}`;
 
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: `${SYSTEM_PROMPT}\n\n${description}${paramsText}`
-        }]
-      }],
-      generationConfig: { maxOutputTokens: 1000, temperature: 0.3 }
+      contents: [{ parts: [{ text: `${SYSTEM_PROMPT}\n\n${description}${paramsText}` }] }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 1000, topP: 0.8 },
+      safetySettings: [
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+      ],
     }),
   });
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
-    if (response.status === 400) throw new Error("API key Gemini non valida. Controlla e reinserisci.");
-    if (response.status === 429) throw new Error("Troppe richieste. Aspetta un momento e riprova.");
     throw new Error(err?.error?.message || `Errore API (${response.status})`);
   }
 
   const data = await response.json();
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  const clean = text.replace(/```json|```/g, "").trim();
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("Risposta AI non valida. Riprova.");
   try {
-    return JSON.parse(clean);
+    return JSON.parse(match[0]);
   } catch {
-    const match = clean.match(/\{[\s\S]*\}/);
-    if (match) return JSON.parse(match[0]);
     throw new Error("Risposta AI non valida. Riprova.");
   }
 }
