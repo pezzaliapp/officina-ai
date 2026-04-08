@@ -289,3 +289,84 @@ body {
   font-family: var(--mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.1em;
 }
 .footer-dot { color: var(--border-hi); }
+
+/* ── PROBLEM BLOCK ── */
+.problem-block {
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 0 0 1px rgba(245,166,35,0.08), 0 0 24px rgba(245,166,35,0.06);
+}
+.problem-header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.problem-label  { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.2em; font-weight: 600; }
+.problem-hint   { font-size: 12px; color: var(--text-muted); }
+.problem-input {
+  background: var(--bg-field);
+  border: 1px solid var(--border-hi);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--sans); font-size: 14px;
+  padding: 14px 16px; resize: vertical; width: 100%;
+  transition: border-color 0.2s; line-height: 1.6;
+  min-height: 100px;
+}
+.problem-input:focus       { outline: none; border-color: var(--accent); }
+.problem-input::placeholder{ color: var(--text-muted); font-size: 13px; }
+.problem-warn { font-size: 12px; color: rgba(245,166,35,0.6); font-family: var(--mono); }
+
+/* ── PARAMS DETAILS ── */
+.params-details { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.params-summary {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px; cursor: pointer;
+  list-style: none; user-select: none;
+  background: var(--bg-field);
+  transition: background 0.2s;
+}
+.params-summary::-webkit-details-marker { display: none; }
+.params-summary:hover { background: var(--border); }
+.params-summary-label { font-family: var(--mono); font-size: 10px; color: var(--text-label); letter-spacing: 0.18em; }
+.params-summary-hint  { font-size: 11px; color: var(--text-muted); }
+.params-details .form-grid { padding: 12px; border-top: 1px solid var(--border); }
+
+/* ── DISABLED BUTTON STATE ── */
+.analyze-btn.disabled {
+  background: var(--bg-field); color: var(--text-muted);
+  border: 1px solid var(--border); cursor: not-allowed;
+}
+
+/* ── ESEMPI ── */
+.esempi-row {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px;
+}
+.esempio-chip {
+  font-size: 11px; color: var(--text-muted);
+  background: transparent; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 4px 10px;
+  cursor: pointer; transition: all 0.15s; text-align: left;
+  font-family: var(--sans);
+}
+.esempio-chip:hover {
+  border-color: var(--accent); color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* ── INFO TEXT ── */
+.info-text {
+  font-size: 15px; line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* ── PLACEHOLDER LEGGIBILE ── */
+.problem-input::placeholder {
+  color: #555 !important;
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* ── PLACEHOLDER FIX ── */
+.problem-input::placeholder { color: #888 !important; font-size: 13px; font-style: normal; }
+.notes-input::placeholder    { color: #777 !important; }
+.problem-input { color: #e8e8e8; }
