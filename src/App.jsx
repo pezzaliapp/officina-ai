@@ -41,7 +41,7 @@ Regole tecniche fondamentali:
 async function callGemini(apiKey, { description, speed, location, axle, centering, precedent, useParams }) {
   const paramsText = useParams ? `\n\nPARAMETRI AGGIUNTIVI:\n- Velocità: ${speed}\n- Dove si sente: ${location}\n- Asse: ${axle}\n- Centraggio: ${centering}\n- Quando è comparso: ${precedent}` : "";
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${apiKey}`;
 
   const response = await fetch(url, {
     method: "POST",
