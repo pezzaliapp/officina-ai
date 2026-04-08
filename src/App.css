@@ -370,3 +370,6 @@ body {
 .problem-input::placeholder { color: #888 !important; font-size: 13px; font-style: normal; }
 .notes-input::placeholder    { color: #777 !important; }
 .problem-input { color: #e8e8e8; }
+
+/* ── PLACEHOLDER VISIBILE ── */
+.problem-input::placeholder { color: #aaaaaa !important; font-style: normal !important; }
