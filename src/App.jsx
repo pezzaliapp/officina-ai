@@ -38,41 +38,38 @@ Regole tecniche fondamentali:
 - Tags: parole chiave tecniche senza spazi (usa trattino)
 - Tono diretto, usa "tu" rivolto al meccanico`;
 
-async function callClaude(apiKey, { description, speed, location, axle, centering, precedent, useParams }) {
+async function callGemini(apiKey, { description, speed, location, axle, centering, precedent, useParams }) {
   const paramsText = useParams ? `\n\nPARAMETRI AGGIUNTIVI:\n- Velocità: ${speed}\n- Dove si sente: ${location}\n- Asse: ${axle}\n- Centraggio: ${centering}\n- Quando è comparso: ${precedent}` : "";
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+  const response = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1000,
-      system: SYSTEM_PROMPT,
-      messages: [{
-        role: "user",
-        content: `${description}${paramsText}`
+      contents: [{
+        parts: [{
+          text: `${SYSTEM_PROMPT}\n\n${description}${paramsText}`
+        }]
       }],
+      generationConfig: { maxOutputTokens: 1000, temperature: 0.3 }
     }),
   });
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
-    if (response.status === 401) throw new Error("API key non valida. Controlla e reinserisci.");
+    if (response.status === 400) throw new Error("API key Gemini non valida. Controlla e reinserisci.");
     if (response.status === 429) throw new Error("Troppe richieste. Aspetta un momento e riprova.");
     throw new Error(err?.error?.message || `Errore API (${response.status})`);
   }
 
   const data = await response.json();
-  const text = data.content?.[0]?.text || "";
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  const clean = text.replace(/```json|```/g, "").trim();
   try {
-    return JSON.parse(text.trim());
+    return JSON.parse(clean);
   } catch {
-    const match = text.match(/\{[\s\S]*\}/);
+    const match = clean.match(/\{[\s\S]*\}/);
     if (match) return JSON.parse(match[0]);
     throw new Error("Risposta AI non valida. Riprova.");
   }
@@ -145,7 +142,7 @@ export default function App() {
 
   const saveKey = () => {
     const k = keyInput.trim();
-    if (!k.startsWith("sk-ant-")) { setError("La key deve iniziare con sk-ant-"); return; }
+    if (!k.startsWith("AIza")) { setError("La key Gemini deve iniziare con AIza"); return; }
     localStorage.setItem("ta_apikey", k);
     setApiKey(k);
     setKeyInput("");
@@ -170,7 +167,7 @@ export default function App() {
     setError(null);
     setResult(null);
     try {
-      const res = await callClaude(apiKey, {
+      const res = await callGemini(apiKey, {
         description: description.trim(),
         speed:     getLabel(SPEEDS, speed),
         location:  getLabel(LOCATIONS, location),
@@ -243,7 +240,7 @@ export default function App() {
                   Salvata solo nel tuo browser.
                 </div>
                 <div className="key-input-row">
-                  <input type={keyVisible ? "text" : "password"} className="key-input" placeholder="sk-ant-api03-..."
+                  <input type={keyVisible ? "text" : "password"} className="key-input" placeholder="AIzaSy..."
                     value={keyInput} onChange={e => setKeyInput(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && saveKey()} autoComplete="off" spellCheck={false} />
                   <button className="key-eye" onClick={() => setKeyVisible(!keyVisible)}>{keyVisible ? "🙈" : "👁"}</button>
