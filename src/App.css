@@ -302,3 +302,24 @@ body {
 /* ── FOOTER ── */
 .footer { border-top: 1px solid var(--border); padding: 14px 24px; display: flex; justify-content: center; align-items: center; gap: 10px; font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.1em; }
 .footer-dot { color: var(--border-hi); }
+
+/* ── LANG TOGGLE ── */
+.lang-toggle { display: flex; border: 1px solid var(--border-hi); border-radius: var(--radius); overflow: hidden; }
+.lang-btn {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  padding: 5px 10px; background: transparent; border: none;
+  color: var(--text-3); cursor: pointer; transition: all 0.15s; letter-spacing: 0.1em;
+}
+.lang-btn:hover { color: var(--text); background: var(--accent-dim); }
+.lang-active { background: var(--accent) !important; color: #0a0a0a !important; }
+
+/* ── SERIAL INPUT ── */
+.serial-row { display: flex; }
+.serial-input {
+  width: 100%; background: var(--bg-field);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--text); font-family: var(--mono); font-size: 12px;
+  padding: 8px 12px; transition: border-color 0.2s; letter-spacing: 0.05em;
+}
+.serial-input:focus { outline: none; border-color: var(--accent); }
+.serial-input::placeholder { color: var(--text-3); font-style: italic; }
