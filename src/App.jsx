@@ -116,6 +116,7 @@ const ESEMPI = [
 ];
 
 export default function App() {
+  const [darkMode, setDarkMode]       = useState(() => localStorage.getItem("ta_theme") !== "light");
   const [apiKey, setApiKey]           = useState("");
   const [keyInput, setKeyInput]       = useState("");
   const [keyVisible, setKeyVisible]   = useState(false);
@@ -138,6 +139,11 @@ export default function App() {
     const saved = localStorage.getItem("ta_apikey");
     if (saved) setApiKey(saved);
   }, []);
+
+  useEffect(() => {
+    document.body.setAttribute("data-theme", darkMode ? "dark" : "light");
+    localStorage.setItem("ta_theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
 
   const saveKey = () => {
     const k = keyInput.trim();
@@ -203,19 +209,24 @@ export default function App() {
   };
 
   return (
-    <div className="app">
+    <div className={`app ${darkMode ? "dark" : "light"}`}>
       <header className="header">
         <div className="header-inner">
           <div className="logo-block">
             <span className="logo-icon">⟁</span>
             <div>
               <div className="logo-title">TechAssist AI</div>
-              <div className="logo-sub">ASSISTENTE TECNICO · CORMACH</div>
+              <div className="logo-sub">ASSISTENTE TECNICO</div>
             </div>
           </div>
-          <button className={`key-btn ${apiKey ? "key-active" : "key-missing"}`} onClick={() => setShowKeyPanel(!showKeyPanel)}>
-            {apiKey ? "🔑 KEY OK" : "🔑 KEY?"}
-          </button>
+          <div className="header-actions">
+            <button className="theme-btn" onClick={() => setDarkMode(d => !d)} title="Cambia tema">
+              {darkMode ? "☀️" : "🌙"}
+            </button>
+            <button className={`key-btn ${apiKey ? "key-active" : "key-missing"}`} onClick={() => setShowKeyPanel(!showKeyPanel)}>
+              {apiKey ? "🔑 KEY OK" : "🔑 KEY?"}
+            </button>
+          </div>
         </div>
       </header>
 
