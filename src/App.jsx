@@ -321,7 +321,7 @@ Se la domanda riguarda la calibrazione MEC, usa ESATTAMENTE i passi della proced
 Non dire "consulta il manuale" — dai la procedura completa con i tasti esatti ([F+P3], [P3], ecc.).
 ════════════════════════════════════════════`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemma-3-27b-it:generateContent?key=${apiKey}`;
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
