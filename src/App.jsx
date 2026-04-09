@@ -189,9 +189,9 @@ export default function App() {
   const buildReport = () => {
     if (!result) return "";
     if (result.tipo === "info") {
-      return `TECHASSIST OFFICINA — RISPOSTA AI\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDOMANDA:\n"${description}"\n\nRISPOSTA:\n${result.risposta}${result.nota ? `\n\n⚠ NOTA: ${result.nota}` : ""}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTechAssist AI — PezzaliApp / Cormach Srl`;
+      return `TECHASSIST OFFICINA — RISPOSTA AI\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDOMANDA:\n"${description}"\n\nRISPOSTA:\n${result.risposta}${result.nota ? `\n\n⚠ NOTA: ${result.nota}` : ""}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTechAssist AI — PezzaliApp`;
     }
-    return `TECHASSIST OFFICINA — DIAGNOSI AI\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nPROBLEMA:\n"${description}"\n\nPRIORITÀ: ${result.priorita?.toUpperCase()}\n\nCAUSA PROBABILE:\n${result.causa}\n\nAZIONE RACCOMANDATA:\n${result.azione}\n\nPROCEDURA:\n${result.steps?.map((s, i) => `${i + 1}. ${s}`).join("\n")}${result.nota ? `\n\n⚠ NOTA: ${result.nota}` : ""}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTechAssist AI — PezzaliApp / Cormach Srl`;
+    return `TECHASSIST OFFICINA — DIAGNOSI AI\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nPROBLEMA:\n"${description}"\n\nPRIORITÀ: ${result.priorita?.toUpperCase()}\n\nCAUSA PROBABILE:\n${result.causa}\n\nAZIONE RACCOMANDATA:\n${result.azione}\n\nPROCEDURA:\n${result.steps?.map((s, i) => `${i + 1}. ${s}`).join("\n")}${result.nota ? `\n\n⚠ NOTA: ${result.nota}` : ""}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTechAssist AI — PezzaliApp`;
   };
 
   const copyReport = async () => {
@@ -411,7 +411,7 @@ export default function App() {
       <footer className="footer">
         <span>TechAssist AI</span><span className="footer-dot">·</span>
         <span>PezzaliApp</span><span className="footer-dot">·</span>
-        <span>Cormach Srl</span>
+        
       </footer>
     </div>
   );
