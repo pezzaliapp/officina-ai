@@ -303,18 +303,31 @@ async function callGemini(apiKey, { description, serial, speed, location, axle, 
   const paramsText = useParams
     ? (lang === "en"
       ? `\n\nADDITIONAL PARAMETERS:\n- Speed: ${speed}\n- Felt at: ${location}\n- Axle: ${axle}\n- Centering: ${centering}\n- When it started: ${precedent}`
-      : `\n\nPARAMETRI:\n- Velocità: ${speed}\n- Dove si sente: ${location}\n- Asse: ${axle}\n- Centraggio: ${centering}\n- Quando è comparso: ${precedent}`)
+      : `\n\nPARAMETRI AGGIUNTIVI:\n- Velocità: ${speed}\n- Dove si sente: ${location}\n- Asse: ${axle}\n- Centraggio: ${centering}\n- Quando è comparso: ${precedent}`)
     : "";
 
-  const serialText = serial ? (lang === "en" ? `\nMachine serial: ${serial}` : `\nN° serie macchina: ${serial}`) : "";
+  const serialText = serial ? (lang === "en" ? `\nN° serie macchina: ${serial}` : `\nN° serie macchina: ${serial}`) : "";
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemma-3-27b-it:generateContent?key=${apiKey}`;
+  // Il prompt viene costruito con istruzioni esplicite PRIMA della domanda
+  // per forzare Gemma a seguire le istruzioni anche con contesto lungo
+  const fullPrompt = `${SYSTEM_PROMPT}
+
+════════════════════════════════════════════
+DOMANDA DELL'UTENTE:
+${description}${serialText}${paramsText}
+
+ISTRUZIONE CRITICA: Rispondi SOLO con JSON valido, nessun testo fuori dal JSON.
+Se la domanda riguarda la calibrazione MEC, usa ESATTAMENTE i passi della procedura descritta sopra.
+Non dire "consulta il manuale" — dai la procedura completa con i tasti esatti ([F+P3], [P3], ecc.).
+════════════════════════════════════════════`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: `${SYSTEM_PROMPT}\n\n${description}${serialText}${paramsText}` }] }],
-      generationConfig: { temperature: 0.2, maxOutputTokens: 1000, topP: 0.8 },
+      contents: [{ parts: [{ text: fullPrompt }] }],
+      generationConfig: { temperature: 0.1, maxOutputTokens: 1500, topP: 0.8 },
       safetySettings: [
         { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
         { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
