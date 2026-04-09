@@ -184,133 +184,183 @@ const PRECEDENTS_EN = [
   { id: "nessuno", label: "No known event" },
 ];
 
-// ─── SYSTEM PROMPT ─────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `Sei TechAssist, assistente tecnico esperto per officine meccaniche professionali specializzato in attrezzatura Cormach (equilibratrici MEC, smontagomme, sollevatori Cascos).
+// ─── KNOWLEDGE BASE ────────────────────────────────────────────────────────
+// Suddivisa in sezioni. Il router seleziona solo quella rilevante per la domanda.
 
-Rispondi SEMPRE nella stessa lingua dell'utente.
-Rispondi SOLO in JSON valido senza markdown, senza testo fuori dal JSON.
+const KB = {
+  base: `Sei TechAssist, assistente tecnico per officine meccaniche Cormach.
+Rispondi SOLO in JSON valido, senza markdown, senza testo fuori dal JSON.
+Se problema tecnico: {"tipo":"diagnosi","priorita":"alta"|"media"|"bassa","causa":"...","azione":"...","steps":["..."],"nota":"...","tags":["..."]}
+Se domanda informativa: {"tipo":"info","risposta":"...","nota":"..."}
+Rispondi nella stessa lingua della domanda.`,
 
-Se è un problema tecnico:
-{"tipo":"diagnosi","priorita":"alta"|"media"|"bassa","causa":"...","azione":"...","steps":["..."],"nota":"...","tags":["..."]}
-
-Se è una domanda informativa:
-{"tipo":"info","risposta":"...","nota":"..."}
-
-REGOLE TECNICHE GENERALI:
-- Vibrazione solo in frenata = problema freni, non squilibrio
-- Cono standard su cerchio alluminio = centraggio errato
-- Vibrazione a bassa velocità = runout, non squilibrio
-- Dopo urto = verifica cerchio prima di bilanciare
-
-════════════════════════════════════════════
-EQUILIBRATRICI CORMACH SERIE MEC (SENZA MONITOR)
-Modelli: MEC 5, MEC 10, MEC 10 ESD, MEC 20, MEC 20-P
-════════════════════════════════════════════
-
-PROCEDURA CALIBRAZIONE CAR/SUV — passi ESATTI da seguire:
-Materiale: ruota equilibrata cerchio ACCIAIO 15" larghezza 6" distanza ~100mm + 1 peso da 50g (NON alluminio).
-1. Accendere la macchina e togliere ruota e accessori dall'albero
-2. Premere [F+P3] → display mostra "SER SER" (modalità SERVICE)
+  calibrazione: `PROCEDURA CALIBRAZIONE CAR/SUV — MEC 5, MEC 10, MEC 10 ESD, MEC 20, MEC 20-P:
+Materiale necessario: ruota equilibrata con cerchio in ACCIAIO 15" larghezza 6" distanza ~100mm + 1 peso da 50g. NON usare cerchi in alluminio.
+Passi esatti:
+1. Accendere la macchina e togliere ruota e tutti gli accessori dall'albero
+2. Premere [F+P3] → display mostra "SER SER" (modalità SERVICE attiva)
 3. Premere [P3] → display mostra "CAL CAr"
 4. Premere [P3] ancora → display mostra "CAL 0"
-5. Abbassare carter → 4 lanci brevi + 1 completo → display "CAL 1"
-6. Montare ruota campione, inserire dati: [P1]=distanza [P2]=larghezza [P3]=diametro, [P4]/[P5] per variare
-7. Abbassare carter → lancio
-8. Ruotare ruota finché display SINISTRO = "50" → applicare 50g lato INTERNO a ore 12
-9. Abbassare carter → lancio
+5. Abbassare il carter → la macchina esegue 4 lanci brevi poi 1 completo → display mostra "CAL 1"
+6. Montare la ruota campione, inserire le dimensioni: [P1]=distanza, [P2]=larghezza, [P3]=diametro, [P4]/[P5] per variare i valori
+7. Abbassare il carter → lancio
+8. Ruotare la ruota a mano finché il display SINISTRO mostra "50" → applicare 50g lato INTERNO a ore 12
+9. Abbassare il carter → lancio
 10. Togliere il peso interno
-11. Ruotare ruota finché display DESTRO = "50" → applicare 50g lato ESTERNO a ore 12
-12. Abbassare carter → lancio (MEC 20: mantenere carter abbassato)
-13. Calibrazione completata → ritorno automatico in NORMAL
-Uscita anticipata: [F+P3] in qualsiasi momento.
+11. Ruotare la ruota a mano finché il display DESTRO mostra "50" → applicare 50g lato ESTERNO a ore 12
+12. Abbassare il carter → lancio (solo MEC 20: mantenere il carter abbassato per tutto il lancio)
+13. Fine → la macchina torna automaticamente in modalità NORMAL
+Per uscire in qualsiasi momento: premere [F+P3].`,
 
-PROCEDURA CALIBRAZIONE MOTO:
-Prerequisito: calibrazione CAR/SUV già eseguita. ERR 031 = manca calibrazione MOTO.
-1. Posizionare gruppo MOTO sull'albero PERFETTAMENTE VERTICALE
-2. [F+P3] → SERVICE → [P3] → "CAL CAr" → [P4] → "CAL Mot" → [P3] → "CAL 0"
-3. Abbassare carter → lancio
-4. Display "h12 CAL" → peso lato INTERNO, gruppo verticale con peso in alto
-5. Abbassare carter → lancio
-6. Display "CAL h12" → peso lato ESTERNO, gruppo verticale con peso in alto
-7. Abbassare carter → lancio → fine, ritorno automatico NORMAL
-ERR 043 = bridà non verticale → riposizionare e riprovare.
+  calibrazione_moto: `PROCEDURA CALIBRAZIONE MOTO — MEC 5, MEC 10, MEC 20:
+Prerequisito: calibrazione CAR/SUV già eseguita. ERR 031 = calibrazione MOTO mancante.
+Passi:
+1. Posizionare il gruppo MOTO sull'albero in posizione PERFETTAMENTE VERTICALE
+2. Premere [F+P3] → SERVICE → premere [P3] → "CAL CAr" → premere [P4] → "CAL Mot" → premere [P3] → "CAL 0"
+3. Abbassare il carter → lancio
+4. Display mostra "h12 CAL" → applicare il peso lato INTERNO, portare il gruppo MOTO verticale con il peso in alto
+5. Abbassare il carter → lancio
+6. Display mostra "CAL h12" → applicare il peso lato ESTERNO, portare verticale con il peso in alto
+7. Abbassare il carter → lancio → fine, ritorno automatico in NORMAL
+ERR 043 = la bridà non è esattamente verticale → riposizionare e riprovare.`,
 
-ESD — EASY SONAR DATA (solo MEC 10 ESD):
-Calcola automaticamente la larghezza. Solo cerchi in FERRO.
-1. Montare ruota, estrarre tastatore, appoggiarlo sul cerchio → bip lungo → riposizionare a riposo
-2. Abbassare carter → ESD calcola larghezza automaticamente
-Se display "URN 002" poi "LAr" → misurare larghezza manualmente e inserire con [P4]/[P5].
+  esd: `ESD — EASY SONAR DATA (solo MEC 10 ESD):
+Calcola automaticamente la larghezza ruota. Funziona SOLO con cerchi in FERRO, non alluminio.
+Procedura:
+1. Montare la ruota sull'albero
+2. Estrarre il tastatore, appoggiarlo sul cerchio → attendere il bip lungo → riposizionarlo a riposo
+3. Il programma STANDARD + ESD si attivano automaticamente
+4. Abbassare il carter per avviare il lancio → ESD calcola la larghezza automaticamente
+Se display mostra "URN 002" poi "LAr" → valore ESD non valido → misurare la larghezza manualmente e inserirla con [P4]/[P5].`,
 
-PROGRAMMI ([P4]/[P5]): STD=acciaio(default) | ALU1=alluminio predefinito | ALS1=alluminio piano esterno libero | ALS2=alluminio entrambi i piani liberi
-TIPI RUOTA ([P6]): CAR=auto(default) | MOTO=moto+ALU1+150mm | SUV=fuoristrada
-Stand-by: dopo 5min → premere qualsiasi tasto tranne [P7] per uscire.
+  errori: `CODICI ERRORE EQUILIBRATRICI MEC — cause e soluzioni:
+ERR 000-009 (INT ERR): Errore interno parametri → contattare assistenza tecnica
+ERR 010 (REV SPN): Rotazione inversa della ruota → contattare assistenza
+ERR 012 (NO STP): Ruota non si arresta → controllare tensione rete; se persiste → assistenza
+ERR 014 (NO SPN): Ruota non ruota → contattare assistenza
+ERR 015: Tasti premuti all'accensione → rilasciare tutti i tasti, spegnere e riaccendere
+ERR 016 (DIS OUT): Tastatore distanza non a riposo → riposizionarlo; oppure [F+P2] per disabilitare temporaneamente
+ERR 017 (LAR OUT): Tastatore larghezza non a riposo → riposizionarlo; oppure [F+P2] per disabilitare
+ERR 019 (NO CP): Processore comunicazione assente → spegnere e riaccendere; porta USB disabilitata
+ERR 020 (NO EEP): Nessuna comunicazione EEPROM → spegnere e riaccendere; se persiste → assistenza
+ERR 021 (EEP ERR): Dati calibrazione assenti o corrotti → eseguire calibrazione CAR/SUV e/o MOTO
+ERR 022-024: Segnale pick-up canale A troppo alto → spegnere e riaccendere; se persiste → assistenza
+ERR 025 (SHF IMB): Peso presente durante fase CAL0 → togliere il peso e ripetere il lancio CAL0
+ERR 026 (NO -A-): Segnale pick-up A assente durante CAL2 → applicare il peso e ripetere
+ERR 027 (NO -B-): Segnale pick-up B assente durante CAL2 → applicare il peso e ripetere
+ERR 028 (INN IMB): Peso interno durante CAL3, deve essere ESTERNO → togliere e ripetere
+ERR 030 (CAR CAL): Dati calibrazione CAR/SUV assenti → eseguire calibrazione CAR/SUV
+ERR 031 (MOT CAL): Dati calibrazione MOTO assenti → eseguire calibrazione MOTO
+ERR 034 (ALU -1-): Tipo ruota MOTO attivo → impossibile cambiare programma
+ERR 039 (W.GUARD): Carter aperto → abbassare il carter
+ERR 042: Procedura SWI annullata → verificare freno elettromagnetico e attrito
+ERR 043 (NO VRT): Bridà moto non verticale durante calibrazione → riposizionare verticalmente
+ERR 046 (NO DIA): Tastatore diametro disconnesso → premere [F+P2] per disabilitare
+ERR 047 (NO LAR): Tastatore larghezza disconnesso → premere [F+P2] per disabilitare
+ERR 050: Pesi nascosti: ruota già equilibrata lato esterno → operazione non consentita
+ERR 051 (TOO FAR): Pesi nascosti: punto W1 oltre 120° dal balourd esterno → selezionare punto più vicino
+ERR 052 (NOT INC): Pesi nascosti: balourd esterno non compreso tra W1 e W2 → rifare procedura
+ERR 055 (NO OPT): Balourd statico troppo basso per programma ottimizzazione (soglia < 12g)
+AVV 001 (DO OPT): Balourd eccessivo → consigliato usare programma ottimizzazione`,
 
-════════════════════════════════════════════
-CODICI ERRORE EQUILIBRATRICI MEC
-════════════════════════════════════════════
-ERR 000-009 INT ERR → Errore interno, contattare assistenza
-ERR 010 REV SPN → Rotazione inversa, contattare assistenza
-ERR 012 NO STP → Ruota non si arresta, controllare tensione rete
-ERR 014 NO SPN → Ruota non ruota, contattare assistenza
-ERR 015 → Tasti premuti all'accensione, rilasciare tutti e riaccendere
-ERR 016 DIS OUT → Tastatore distanza non a riposo, riposizionare o [F+P2] per disabilitare
-ERR 017 LAR OUT → Tastatore larghezza non a riposo, riposizionare o [F+P2]
-ERR 019 NO CP → Processore comunicazione assente, riaccendere
-ERR 020 NO EEP → No comunicazione EEPROM, riaccendere
-ERR 021 EEP ERR → Dati calibrazione assenti/corrotti → eseguire calibrazione CAR/SUV e/o MOTO
-ERR 022-024 → Segnale pick-up troppo alto, riaccendere
-ERR 025 SHF IMB → Peso presente durante CAL0, toglierlo e ripetere
-ERR 026 NO -A- → No segnale pick-up A durante CAL2, applicare peso e ripetere
-ERR 027 NO -B- → No segnale pick-up B durante CAL2, applicare peso e ripetere
-ERR 028 INN IMB → Peso interno durante CAL3, deve essere esterno
-ERR 030 CAR CAL → Dati calibrazione CAR mancanti → eseguire calibrazione CAR/SUV
-ERR 031 MOT CAL → Dati calibrazione MOTO mancanti → eseguire calibrazione MOTO
-ERR 034 ALU -1- → Tipo MOTO attivo, non si può cambiare programma
-ERR 039 W.GUARD → Carter aperto, abbassarlo
-ERR 042 → SWI annullata, verificare freno elettromagnetico
-ERR 043 NO VRT → Bridà moto non verticale durante calibrazione MOTO
-ERR 046 NO DIA → Tastatore diametro disconnesso, usare [F+P2]
-ERR 047 NO LAR → Tastatore larghezza disconnesso, usare [F+P2]
-ERR 050 → Pesi nascosti: ruota già equilibrata lato esterno
-ERR 051 TOO FAR → Pesi nascosti: punto W1 oltre 120° dal balourd
-ERR 052 NOT INC → Pesi nascosti: balourd esterno non tra W1 e W2
-ERR 055 NO OPT → Balourd statico troppo basso per ottimizzazione
-AVV 001 DO OPT → Balourd eccessivo, usare ottimizzazione
+  vibrazioni: `REGOLE DIAGNOSI VIBRAZIONI:
+- Vibrazione SOLO in frenata → problema freni o disco, NON squilibrio ruota
+- Vibrazione a BASSA velocità (<40 km/h) → runout cerchio o gomma, non squilibrio
+- Cono standard su cerchio ALLUMINIO → centraggio errato, usare centratore corretto
+- Comparso dopo URTO o buche → verificare cerchio per ammaccature prima di bilanciare
+- Vibrazione al volante → prevalentemente asse anteriore
+- Vibrazione al sedile/pianale → prevalentemente asse posteriore
+- Ripetibile su entrambi i lanci → problema ruota (squilibrio, runout)
+- Non ripetibile → problema centraggio o serraggio
+Ordine operativo: 1.Centraggio 2.Ripetibilità 3.Runout cerchio 4.Runout gomma 5.Veicolo`,
 
-════════════════════════════════════════════
-DATI TECNICI MEC
-════════════════════════════════════════════
-Alimentazione: 1Ph 230V 50/60Hz | Potenza: 100W | Velocità: 140 RPM
-Balourd max: 999g | Risoluzione: X1=1g, X5=5g(default)
-Albero: Ø40mm | Ruota max: Ø1120mm, larghezza 590mm, peso 75kg
-Cerchi: Ø25-890mm (1"-35"), larghezza 50-500mm (2"-20") | Rumore: <70dB(A)`;
+  smontagomme: `SMONTAGOMME CORMACH (PUMA, CM 1200BB, F535S, F536S, LIGRO):
+Problemi comuni:
+- Perdita aria dal cilindro → guarnizioni cilindro usurate, raccordi pneumatici allentati, valvola difettosa. Soluzione: verificare pressione compressore (min 8 bar), controllare tutti i raccordi, sostituire guarnizioni
+- Braccio non scende → pressione compressore insufficiente, blocco meccanico, olio esaurito. Soluzione: verificare pressione, lubrificare guide, controllare valvola di discesa
+- Testa non ruota → problema motore o cinghia o finecorsa. Soluzione: verificare alimentazione elettrica, tensione cinghia, posizione finecorsa
+- Bead breaker non funziona → pressione insufficiente, usura lame. Soluzione: aumentare pressione, verificare usura pala`,
 
-// ─── CHIAMATA API ─────────────────────────────────────────────────────────
-async function callGemini(apiKey, { description, serial, speed, location, axle, centering, precedent, useParams, lang }) {
+  sollevatori: `SOLLEVATORI CASCOS (C-3.2, C-3.5, C-4, C-5, C-5.5, C-125):
+Problemi comuni:
+- Non sale o sale storto → livello olio idraulico basso, sincronizzazione colonne ILC, blocchi sicurezza attivati. Soluzione: verificare livello olio, controllare sistema ILC, sbloccare sicurezze
+- Rimane bloccato → sblocco manuale di emergenza (vedi manuale specifico modello)
+- Rumore anomalo durante salita/discesa → cuscinetti usurati, pompa idraulica, livello olio
+- Sistema ILC non sincronizza → batteria scarica, sensori livello, aggiornamento firmware
+- Ponte a forbice non scende → valvola di controllo discesa, centralina idraulica`,
+};
+
+// ─── ROUTER INTELLIGENTE ───────────────────────────────────────────────────
+// Seleziona solo le sezioni KB rilevanti in base alla domanda
+function selectKnowledge(text) {
+  const q = text.toLowerCase();
+  const sections = [];
+
+  // Calibrazione
+  if (/calibr|cal\s|f\+p3|err.?02[01]|eep.?err|car.?cal|mot.?cal/i.test(q)) {
+    sections.push(KB.calibrazione);
+    if (/moto|bike|mot/i.test(q)) sections.push(KB.calibrazione_moto);
+  }
+
+  // ESD
+  if (/esd|sonar|larghezza.?auto|auto.?larghezza/i.test(q)) {
+    sections.push(KB.esd);
+  }
+
+  // Codici errore
+  if (/err\s*0?\d+|errore|error|dis.?out|lar.?out|no.?stp|no.?spn|rev.?spn|eep|shf|no.?cp|w.?guard|no.?vrt|no.?dia|no.?lar|too.?far|not.?inc|no.?opt/i.test(q)) {
+    sections.push(KB.errori);
+  }
+
+  // Vibrazioni
+  if (/vibr|trema|balla|squilibr|runout|centraggio|bilanc|pesa|peso/i.test(q)) {
+    sections.push(KB.vibrazioni);
+  }
+
+  // Smontagomme
+  if (/smontagomm|puma|ligro|cm.?1200|f.?535|f.?536|aria|cilindro|bead|braccio/i.test(q)) {
+    sections.push(KB.smontagomme);
+  }
+
+  // Sollevatori
+  if (/sollevator|ponte|cascos|ilc|colonne|sale|scende|forbicc/i.test(q)) {
+    sections.push(KB.sollevatori);
+  }
+
+  // Se nessuna sezione specifica, aggiungi quella sulle vibrazioni come base
+  if (sections.length === 0) {
+    sections.push(KB.vibrazioni);
+  }
+
+  return sections.join("\n\n");
+}
+
+// ─── CHIAMATA API GEMMA 3 ─────────────────────────────────────────────────
+async function callGemma(apiKey, { description, serial, speed, location, axle, centering, precedent, useParams, lang }) {
   const paramsText = useParams
-    ? (lang === "en"
-      ? `\n\nADDITIONAL PARAMETERS:\n- Speed: ${speed}\n- Felt at: ${location}\n- Axle: ${axle}\n- Centering: ${centering}\n- When it started: ${precedent}`
-      : `\n\nPARAMETRI AGGIUNTIVI:\n- Velocità: ${speed}\n- Dove si sente: ${location}\n- Asse: ${axle}\n- Centraggio: ${centering}\n- Quando è comparso: ${precedent}`)
+    ? `\nParametri aggiuntivi: velocità=${speed}, dove si sente=${location}, asse=${axle}, centraggio=${centering}, quando=${precedent}`
     : "";
-  const serialText = serial ? `\nN° serie macchina: ${serial}` : "";
+  const serialText = serial ? `\nN° serie: ${serial}` : "";
 
-  const fullPrompt = `${SYSTEM_PROMPT}
+  // Seleziona solo la conoscenza rilevante per questa domanda
+  const knowledge = selectKnowledge(description);
 
-════════════════════════════════════════════
-DOMANDA:
-${description}${serialText}${paramsText}
+  const prompt = `${KB.base}
 
-ISTRUZIONE CRITICA: Rispondi SOLO con JSON valido. Nessun testo fuori dal JSON.
-Se la domanda riguarda calibrazione MEC usa ESATTAMENTE i passi numerati della procedura sopra con i tasti esatti ([F+P3], [P3], ecc.) e il peso da 50g. Non dire "consulta il manuale".
-════════════════════════════════════════════`;
+CONOSCENZA TECNICA RILEVANTE:
+${knowledge}
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+DOMANDA: ${description}${serialText}${paramsText}
+
+Rispondi SOLO con JSON valido:`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemma-3-27b-it:generateContent?key=${apiKey}`;
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: fullPrompt }] }],
-      generationConfig: { temperature: 0.1, maxOutputTokens: 1500, topP: 0.8 },
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.1, maxOutputTokens: 1200, topP: 0.8 },
       safetySettings: [
         { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
         { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
@@ -342,9 +392,8 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem("ta_theme") !== "light");
   const [apiKey, setApiKey]     = useState("");
   const [keyInput, setKeyInput] = useState("");
-  const [keyVisible, setKeyVisible] = useState(false);
+  const [keyVisible, setKeyVisible]   = useState(false);
   const [showKeyPanel, setShowKeyPanel] = useState(false);
-
   const [description, setDescription] = useState("");
   const [serial, setSerial]           = useState("");
   const [showParams, setShowParams]   = useState(false);
@@ -353,24 +402,19 @@ export default function App() {
   const [axle, setAxle]               = useState("anteriore");
   const [centering, setCentering]     = useState("cono-std");
   const [precedent, setPrecedent]     = useState("dopo-equil");
-
-  const [result, setResult] = useState(null);
+  const [result, setResult]   = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError]   = useState(null);
-  const [copied, setCopied] = useState(false);
+  const [error, setError]     = useState(null);
+  const [copied, setCopied]   = useState(false);
 
-  const t         = T[lang];
-  const SPEEDS    = lang === "en" ? SPEEDS_EN    : SPEEDS_IT;
-  const LOCATIONS = lang === "en" ? LOCATIONS_EN : LOCATIONS_IT;
-  const AXLES     = lang === "en" ? AXLES_EN     : AXLES_IT;
-  const CENTERING = lang === "en" ? CENTERING_EN : CENTERING_IT;
-  const PRECEDENTS= lang === "en" ? PRECEDENTS_EN: PRECEDENTS_IT;
+  const t          = T[lang];
+  const SPEEDS     = lang === "en" ? SPEEDS_EN     : SPEEDS_IT;
+  const LOCATIONS  = lang === "en" ? LOCATIONS_EN  : LOCATIONS_IT;
+  const AXLES      = lang === "en" ? AXLES_EN      : AXLES_IT;
+  const CENTERING  = lang === "en" ? CENTERING_EN  : CENTERING_IT;
+  const PRECEDENTS = lang === "en" ? PRECEDENTS_EN : PRECEDENTS_IT;
 
-  useEffect(() => {
-    const saved = localStorage.getItem("ta_apikey");
-    if (saved) setApiKey(saved);
-  }, []);
-
+  useEffect(() => { const s = localStorage.getItem("ta_apikey"); if (s) setApiKey(s); }, []);
   useEffect(() => {
     document.body.setAttribute("data-theme", darkMode ? "dark" : "light");
     localStorage.setItem("ta_theme", darkMode ? "dark" : "light");
@@ -394,7 +438,7 @@ export default function App() {
     if (!canAnalyze) return;
     setLoading(true); setError(null); setResult(null);
     try {
-      const res = await callGemini(apiKey, {
+      const res = await callGemma(apiKey, {
         description: description.trim(), serial: serial.trim(),
         speed: getLabel(SPEEDS, speed), location: getLabel(LOCATIONS, location),
         axle: getLabel(AXLES, axle), centering: getLabel(CENTERING, centering),
@@ -422,7 +466,7 @@ export default function App() {
     catch { alert("Cannot copy"); }
   };
 
-  // WhatsApp: nessun numero fisso — apre l'app e l'utente sceglie il destinatario
+  // WhatsApp: apre l'app, l'utente sceglie il destinatario
   const sendWhatsApp = () => {
     const text = buildReport();
     if (!text) return;
@@ -435,20 +479,13 @@ export default function App() {
   return (
     <div className={`app ${darkMode ? "dark" : "light"}`}>
 
-      {/* CSS WhatsApp inline — nessun file extra necessario */}
+      {/* CSS WhatsApp — inline, nessun file extra */}
       <style>{`
-        .action-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
-        .action-row .copy-btn { flex:1; min-width:140px; }
-        .wa-btn {
-          display:flex; align-items:center; justify-content:center; gap:8px;
-          flex:1; min-width:180px; padding:10px 16px;
-          background:#25D366; color:#fff; border:none; border-radius:8px;
-          font-size:13px; font-weight:700; letter-spacing:.4px;
-          cursor:pointer; transition:background .18s, transform .1s;
-          font-family:inherit;
-        }
-        .wa-btn:hover { background:#1ebe5a; transform:translateY(-1px); }
-        .wa-btn:active { background:#17a84f; transform:translateY(0); }
+        .action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
+        .action-row .copy-btn{flex:1;min-width:140px;}
+        .wa-btn{display:flex;align-items:center;justify-content:center;gap:8px;flex:1;min-width:180px;padding:10px 16px;background:#25D366;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:.4px;cursor:pointer;transition:background .18s,transform .1s;font-family:inherit;}
+        .wa-btn:hover{background:#1ebe5a;transform:translateY(-1px);}
+        .wa-btn:active{background:#17a84f;transform:translateY(0);}
       `}</style>
 
       <header className="header">
@@ -462,11 +499,11 @@ export default function App() {
           </div>
           <div className="header-actions">
             <div className="lang-toggle">
-              <button className={`lang-btn ${lang === "it" ? "lang-active" : ""}`} onClick={() => switchLang("it")}>IT</button>
-              <button className={`lang-btn ${lang === "en" ? "lang-active" : ""}`} onClick={() => switchLang("en")}>EN</button>
+              <button className={`lang-btn ${lang==="it"?"lang-active":""}`} onClick={() => switchLang("it")}>IT</button>
+              <button className={`lang-btn ${lang==="en"?"lang-active":""}`} onClick={() => switchLang("en")}>EN</button>
             </div>
             <button className="theme-btn" onClick={() => setDarkMode(d => !d)}>{darkMode ? "☀️" : "🌙"}</button>
-            <button className={`key-btn ${apiKey ? "key-active" : "key-missing"}`} onClick={() => setShowKeyPanel(!showKeyPanel)}>
+            <button className={`key-btn ${apiKey?"key-active":"key-missing"}`} onClick={() => setShowKeyPanel(!showKeyPanel)}>
               {apiKey ? t.keyOk : t.keyMissing}
             </button>
           </div>
@@ -478,7 +515,7 @@ export default function App() {
           <div className="key-panel-inner">
             {apiKey ? (
               <>
-                <div className="key-panel-title">{lang === "it" ? "API Key configurata" : "API Key configured"}</div>
+                <div className="key-panel-title">{lang==="it" ? "API Key configurata" : "API Key configured"}</div>
                 <div className="key-masked">AIza···{apiKey.slice(-6)}</div>
                 <div className="key-panel-actions">
                   <button className="key-action-remove" onClick={removeKey}>{t.keyRemove}</button>
@@ -492,10 +529,10 @@ export default function App() {
                   {t.keyHint} <a href="https://aistudio.google.com" target="_blank" rel="noreferrer">aistudio.google.com</a> → Get API Key. {t.keySaved}
                 </div>
                 <div className="key-input-row">
-                  <input type={keyVisible ? "text" : "password"} className="key-input" placeholder="AIzaSy..."
+                  <input type={keyVisible?"text":"password"} className="key-input" placeholder="AIzaSy..."
                     value={keyInput} onChange={e => setKeyInput(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && saveKey()} autoComplete="off" spellCheck={false} />
-                  <button className="key-eye" onClick={() => setKeyVisible(!keyVisible)}>{keyVisible ? "🙈" : "👁"}</button>
+                    onKeyDown={e => e.key==="Enter" && saveKey()} autoComplete="off" spellCheck={false}/>
+                  <button className="key-eye" onClick={() => setKeyVisible(!keyVisible)}>{keyVisible?"🙈":"👁"}</button>
                 </div>
                 <button className="key-save-btn" onClick={saveKey}>{t.keySave}</button>
               </>
@@ -511,10 +548,10 @@ export default function App() {
             <span className="problem-hint">{t.fieldHint}</span>
           </div>
           <textarea className="problem-input" placeholder={t.fieldPlaceholder}
-            value={description} onChange={e => { setDescription(e.target.value); setResult(null); }} rows={4} />
+            value={description} onChange={e => { setDescription(e.target.value); setResult(null); }} rows={4}/>
           <div className="serial-row">
             <input className="serial-input" placeholder={t.serialPlaceholder}
-              value={serial} onChange={e => setSerial(e.target.value)} />
+              value={serial} onChange={e => setSerial(e.target.value)}/>
           </div>
           <div className="esempi-row">
             {t.esempi.map((e, i) => (
@@ -530,15 +567,15 @@ export default function App() {
           </summary>
           <div className="form-grid">
             {[
-              [SPEEDS,     speed,     setSpeed,     lang==="it"?"VELOCITÀ":"SPEED",           lang==="it"?"Quando si manifesta?":"When does it occur?"],
-              [LOCATIONS,  location,  setLocation,  lang==="it"?"DOVE SI SENTE":"FELT AT",    lang==="it"?"Punto di percezione":"Where felt"],
-              [AXLES,      axle,      setAxle,      lang==="it"?"ASSE":"AXLE",                lang==="it"?"Quale asse?":"Which axle?"],
-              [CENTERING,  centering, setCentering, lang==="it"?"CENTRAGGIO":"CENTERING",     lang==="it"?"Accessorio usato":"Tool used"],
+              [SPEEDS,     speed,     setSpeed,     lang==="it"?"VELOCITÀ":"SPEED",                    lang==="it"?"Quando si manifesta?":"When does it occur?"],
+              [LOCATIONS,  location,  setLocation,  lang==="it"?"DOVE SI SENTE":"FELT AT",             lang==="it"?"Punto di percezione":"Where felt"],
+              [AXLES,      axle,      setAxle,      lang==="it"?"ASSE":"AXLE",                         lang==="it"?"Quale asse?":"Which axle?"],
+              [CENTERING,  centering, setCentering, lang==="it"?"CENTRAGGIO":"CENTERING",              lang==="it"?"Accessorio usato":"Tool used"],
               [PRECEDENTS, precedent, setPrecedent, lang==="it"?"QUANDO È COMPARSO":"WHEN IT STARTED", lang==="it"?"Precedente noto":"Known event"],
             ].map(([items, val, setter, label, hint]) => (
               <FieldBlock key={label} label={label} hint={hint}>
                 <div className="chip-group">
-                  {items.map(s => <Chip key={s.id} active={val === s.id} onClick={() => setter(s.id)} label={s.label} />)}
+                  {items.map(s => <Chip key={s.id} active={val===s.id} onClick={() => setter(s.id)} label={s.label}/>)}
                 </div>
               </FieldBlock>
             ))}
@@ -571,7 +608,7 @@ export default function App() {
               </div>
             </div>
             {result.tags?.length > 0 && (
-              <div className="tag-row">{result.tags.map(tag=><span key={tag} className="tag">#{tag}</span>)}</div>
+              <div className="tag-row">{result.tags.map(tag => <span key={tag} className="tag">#{tag}</span>)}</div>
             )}
             <div className="result-section">
               <div className="result-label">{t.causeLabel}</div>
@@ -584,7 +621,7 @@ export default function App() {
             <div className="result-section">
               <div className="result-label">{t.procedureLabel}</div>
               <ol className="steps-list">
-                {(result.steps||[]).map((step,i)=>(
+                {(result.steps||[]).map((step,i) => (
                   <li key={i} className="step-item"><span className="step-num">{i+1}</span><span>{step}</span></li>
                 ))}
               </ol>
@@ -631,7 +668,7 @@ export default function App() {
           <div className="checklist-card">
             <div className="checklist-title">{t.checklistTitle}</div>
             <div className="checklist-items">
-              {t.checklistItems.map(([n,title,sub])=>(
+              {t.checklistItems.map(([n,title,sub]) => (
                 <div key={n} className="checklist-item">
                   <div className="cl-num">{n}</div>
                   <div><div className="cl-title">{title}</div><div className="cl-sub">{sub}</div></div>
